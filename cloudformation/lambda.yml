@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Lambda to store in DynamoDB auditing events coming from a Kinesis stream
+Parameters:
+    Stack:
+        Description: Stack name
+        Type: String
+        Default: cms-fronts
+    App:
+        Description: Application name
+        Type: String
+        Default: auditing-store-events-lambda
+    Stage:
+        Description: Stage name
+        Type: String
+        AllowedValues:
+            - CODE
+            - PROD
+        Default: CODE
+    EventSourceKinesisStream:
+        Description: Kinesis stream emitting update events
+        Type: String
+Resources:
+    ExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                        Service:
+                            - lambda.amazonaws.com
+                      Action: "sts:AssumeRole"
+            Path: /
+            Policies:
+                - PolicyName: consumeKinesis
+                  PolicyDocument:
+                    Statement:
+                        Effect: Allow
+                        Action:
+                            - "kinesis:GetRecords"
+                            - "kinesis:GetShardIterator"
+                            - "kinesis:DescribeStream"
+                            - "kinesis:ListStreams"
+                        Resource:
+                            "Fn::Join":
+                                - ""
+                                -
+                                    - "arn:aws:kinesis:"
+                                    - Ref: "AWS::Region"
+                                    - ":"
+                                    - Ref: "AWS::AccountId"
+                                    - ":stream/"
+                                    - Ref: EventSourceKinesisStream
+                - PolicyName: listStreams
+                  PolicyDocument:
+                    Statement:
+                        Effect: Allow
+                        Action:
+                            - "kinesis:ListStreams"
+                        Resource: "*"
+                - PolicyName: logs
+                  PolicyDocument:
+                    Statement:
+                        Effect: Allow
+                        Action:
+                            - "logs:CreateLogGroup"
+                            - "logs:CreateLogStream"
+                            - "logs:PutLogEvents"
+                        Resource: "arn:aws:logs:*:*:*"
+                - PolicyName: lambda
+                  PolicyDocument:
+                    Statement:
+                        Effect: Allow
+                        Action:
+                            - "lambda:InvokeFunction"
+                        Resource: "*"
+    Lambda:
+        Type: AWS::Lambda::Function
+        Properties:
+            Code:
+                S3Bucket: lambda-functions-cms-fronts
+                S3Key:
+                    "Fn::Join":
+                        - "/"
+                        -
+                            - Ref: App
+                            - Ref: Stage
+                            - auditing-store-events-lambda.zip
+            Description: Decode Thrift events and store them in DynamoDB
+            Handler: index.handler
+            MemorySize: 128
+            Role:
+                "Fn::GetAtt": ["ExecutionRole", "Arn"]
+            Runtime: nodejs
+            Timeout: 3

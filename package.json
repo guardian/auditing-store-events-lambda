@@ -1,0 +1,36 @@
+{
+  "name": "auditing-store-events-lambda",
+  "version": "1.0.0",
+  "description": "Lambda to store in DynamoDB auditing events coming from a Kinesis stream",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:guardian/auditing-store-events-lambda.git"
+  },
+  "scripts": {
+    "build": "gulp package",
+    "deploy": "gulp deploy",
+    "test": "gulp test",
+    "start": "gulp dev"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.2.33",
+    "babel-core": "^6.4.5",
+    "babel-loader": "^6.2.1",
+    "babel-preset-es2015": "^6.3.13",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.2.0",
+    "gulp": "^3.9.0",
+    "gulp-data": "^1.2.1",
+    "gulp-eslint": "^1.1.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-spawn-mocha": "^2.2.2",
+    "gulp-template": "^3.1.0",
+    "gulp-yaml": "^1.0.1",
+    "gulp-zip": "^3.1.0",
+    "mocha": "^2.4.5",
+    "node-riffraff-artefact": "^1.3.8",
+    "webpack": "^1.12.12",
+    "webpack-stream": "^3.1.0"
+  }
+}

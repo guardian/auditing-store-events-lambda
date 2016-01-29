@@ -1,0 +1,39 @@
+defaultStacks:
+    - cmsFronts
+packages: 
+    cloudformation: 
+        type: cloud-formation
+        apps: 
+            - auditing-store-events-lambda
+        data: 
+            cloudFormationStackName: auditing-lambda-kinesis-to-dynamo
+            prependStackToCloudFormationStackName: false
+            templatePath: lambda.json
+            templateStageParameters: 
+                CODE: 
+                    Stage: CODE
+                    EventSourceKinesisStream: <%= secrets["event-source-CODE"] %>
+                PROD:
+                    Stage: PROD
+                    EventSourceKinesisStream: <%= secrets["event-source-PROD"] %>
+    s3:
+        type: aws-s3
+        data: 
+            bucket: auditing-lambda-dist
+            publicReadAcl: false
+    lambda: 
+        type: aws-lambda
+        data: 
+            functions: 
+                CODE: 
+                    name: <%= secrets["lambda-function-CODE"] %>
+                    filename: artifact.zip
+                PROD:
+                    name: <%= secrets["lambda-function-PROD"] %>
+                    filename: artifact.zip
+recipies: 
+    default: 
+        actions: 
+            - s3.uploadStaticFiles
+            - cloudformation.updateStack
+            - lambda.updateLambda
