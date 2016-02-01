@@ -1,5 +1,6 @@
 {
   "name": "auditing-store-events-lambda",
+  "private": true,
   "version": "1.0.0",
   "description": "Lambda to store in DynamoDB auditing events coming from a Kinesis stream",
   "license": "Apache-2.0",
