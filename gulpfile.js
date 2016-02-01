@@ -4,7 +4,6 @@ var mocha = require('gulp-spawn-mocha');
 var eslint = require('gulp-eslint');
 var webpack = require('webpack-stream');
 var zip = require('gulp-zip');
-var packageJson = require('./package.json');
 var AWS = require('aws-sdk');
 var data = require('gulp-data');
 var template = require('gulp-template');
@@ -22,7 +21,7 @@ gulp.task('dev', ['cloudformation-dev', 'test-dev']);
 gulp.task('cloudformation', function () {
 	return gulp.src('cloudformation/*.yml')
 		.pipe(yaml({ space: 4 }))
-		.pipe(gulp.dest('./tmp/riffraff'));
+		.pipe(gulp.dest('./tmp/riffraff/packages/cloudformation'));
 });
 
 gulp.task('cloudformation-dev', ['cloudformation'], function () {
@@ -76,19 +75,19 @@ gulp.task('compile', function () {
 
 gulp.task('archive', ['compile', 'cloudformation'], function () {
 	return gulp.src(['tmp/index.js'])
-		.pipe(zip(packageJson.name + '.zip'))
-		.pipe(gulp.dest('tmp/riffraff/packages/' + packageJson.name));
+		.pipe(zip('artifact.zip'))
+		.pipe(gulp.dest('tmp/riffraff/packages/lambda'))
+		.pipe(gulp.dest('tmp/riffraff/packages/s3'));
 });
 
 gulp.task('package', ['archive', 'riffraff'], function () {
 	return gulp.src(['tmp/riffraff/**/*'])
-		.pipe(zip('artifact.zip'))
+		.pipe(zip('artifacts.zip'))
 		.pipe(gulp.dest('tmp'));
 });
 
 gulp.task('deploy', ['package'], function (cb) {
 	riffraff.settings.leadDir = path.join(__dirname, 'tmp/');
-	riffraff.settings.artefactsFilename = 'artifact.zip';
 
 	riffraff.s3Upload().then(function () {
 		cb();

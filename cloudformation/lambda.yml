@@ -78,14 +78,13 @@ Resources:
         Type: AWS::Lambda::Function
         Properties:
             Code:
-                S3Bucket: lambda-functions-cms-fronts
+                S3Bucket: auditing-lambda-dist
                 S3Key:
                     "Fn::Join":
                         - "/"
                         -
-                            - Ref: App
                             - Ref: Stage
-                            - auditing-store-events-lambda.zip
+                            - artifact.zip
             Description: Decode Thrift events and store them in DynamoDB
             Handler: index.handler
             MemorySize: 128
