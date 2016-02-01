@@ -56,7 +56,7 @@ gulp.task('lint', function () {
 gulp.task('riffraff', function () {
 	return gulp.src('deploy.yml')
 		.pipe(data(function () {
-			return fetchFromS3('facia-private', 'auditing-lambda.secrets.json')
+			return fetchFromS3('lambda-private', 'auditing-lambda.secrets.json')
 			.then(function (secrets) {
 				return { secrets: secrets };
 			});
