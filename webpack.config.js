@@ -1,6 +1,13 @@
 var fs = require('fs');
 var path = require('path');
 
+var webpack = require('webpack');
+
+var banner = new webpack.BannerPlugin('var AWS = require("aw-sdk");', {
+	raw: true,
+	entryOnly: true
+});
+
 module.exports = {
 	module: {
 		loaders: [{
@@ -12,6 +19,7 @@ module.exports = {
 	},
 
 	entry: './src/index.js',
+	plugins: [banner],
 
 	target: 'node',
 	output: {

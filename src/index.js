@@ -1,4 +1,6 @@
+/* globals AWS */
 console.log('Loading function');
+console.log('Using aws', AWS.VERSION);
 
 exports.handler = function (event, context) {
     console.log('Received event:', JSON.stringify(event, null, 2));
