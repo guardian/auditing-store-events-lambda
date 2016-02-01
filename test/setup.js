@@ -1,3 +1,4 @@
+require('es6-promise').polyfill();
 var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 
