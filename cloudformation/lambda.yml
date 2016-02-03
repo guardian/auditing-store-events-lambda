@@ -41,7 +41,7 @@ Resources:
                             - "kinesis:GetShardIterator"
                             - "kinesis:DescribeStream"
                             - "kinesis:ListStreams"
-                        Resource:
+                        Resource: &kinesisArn
                             "Fn::Join":
                                 - ""
                                 -
@@ -91,4 +91,13 @@ Resources:
             Role:
                 "Fn::GetAtt": ["ExecutionRole", "Arn"]
             Runtime: nodejs
-            Timeout: 3
+            Timeout: 5
+    EventSource:
+        Type: AWS::Lambda::EventSourceMapping
+        Properties:
+            Enabled: true
+            EventSourceArn:
+                *kinesisArn
+            FunctionName:
+                Ref: Lambda
+            StartingPosition: LATEST
