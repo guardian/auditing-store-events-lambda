@@ -1,17 +1,25 @@
 /* globals AWS */
-console.log('Loading function');
-console.log('Using aws', AWS.VERSION);
+const serializer = require('thrift-serializer');
+const async = require('async');
+const Notification = require('auditing-thrift-model').Notification;
 
 exports.handler = function (event, context) {
-    console.log('Received event:', JSON.stringify(event, null, 2));
-    event.Records.forEach(record => {
-        var payload = decodeRecordPayload(record);
-        console.log('Decoded payload:', payload);
-    });
-    context.succeed('Successfully processed ' + event.Records.length + ' records.');
+	// console.log('Received event:', JSON.stringify(event, null, 2));
+	async.mapSeries(event.Records, processRecord, function (err) {
+		if (err) {
+			console.error('Error processing records', err);
+		} else {
+			console.log('DONE');
+		}
+
+		context.succeed('Processed ' + event.Records.length + ' records.');
+	});
 };
 
-function decodeRecordPayload (record) {
-    // Kinesis data is base64 encoded so decode here
-	return new Buffer(record.kinesis.data, 'base64').toString('ascii');
+function processRecord (record, callback) {
+	serializer.read(Notification, record.kinesis.data, function (err, message) {
+		console.log('Received notification', message);
+
+		callback(err);
+	});
 }

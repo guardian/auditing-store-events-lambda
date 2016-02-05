@@ -41,7 +41,7 @@ gulp.task('mocha', function () {
 });
 
 gulp.task('test-dev', ['test'], function () {
-	gulp.watch('test/*.js', ['test']);
+	gulp.watch('test/*.js', ['mocha']);
 });
 
 gulp.task('lint', function () {
