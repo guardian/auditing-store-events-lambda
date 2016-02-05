@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Lambda to store in DynamoDB auditing events coming from a Kinesis stream
+Description: Lambda to store auditing events coming from a Kinesis stream
 Parameters:
     Stack:
         Description: Stack name
@@ -85,7 +85,7 @@ Resources:
                         -
                             - Ref: Stage
                             - artifact.zip
-            Description: Decode Thrift events and store them in DynamoDB
+            Description: Decode Thrift events and store them
             Handler: index.handler
             MemorySize: 128
             Role:

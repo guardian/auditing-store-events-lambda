@@ -6,7 +6,7 @@ packages:
         apps:
             - auditing-store-events-lambda
         data:
-            cloudFormationStackName: auditing-lambda-kinesis-to-dynamo
+            cloudFormationStackName: auditing-lambda-store
             createStackIfAbsent: false
             prependStackToCloudFormationStackName: false
             templatePath: lambda.json

@@ -1,4 +1,4 @@
-> Lambda to store in DynamoDB auditing events coming from a Kinesis stream
+> Lambda to store auditing events coming from a Kinesis stream
 
 # Architecture
 
