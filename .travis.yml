@@ -2,7 +2,7 @@ language: node_js
 node_js:
     - "0.10"
 after_success:
-    - npm deploy
+    - npm run deploy
 env:
     global:
         # read from S3 bucket
