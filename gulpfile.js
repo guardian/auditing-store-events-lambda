@@ -1,3 +1,4 @@
+require('es6-promise').polyfill();
 var gulp = require('gulp');
 var yaml = require('gulp-yaml');
 var mocha = require('gulp-spawn-mocha');
