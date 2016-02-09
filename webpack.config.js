@@ -15,6 +15,9 @@ module.exports = {
 			loader: 'babel',
 			exclude: /node_modules/,
 			query: JSON.parse(fs.readFileSync(path.join(__dirname, '.babelrc')))
+		}, {
+			test: /\.json$/,
+			loader: 'json'
 		}]
 	},
 
