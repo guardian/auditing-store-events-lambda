@@ -1,12 +1,15 @@
 /* globals AWS */
+import path from 'path';
+import {elasticSearch as config} from './config';
+
 module.exports = function (message, callback) {
 	try {
-		const endpoint = new AWS.Endpoint('search-auditing-3plcaurilp4l5wra76vqzfyrsy.eu-west-1.es.amazonaws.com');
+		const endpoint = new AWS.Endpoint(config.endpoint);
 
 		const req = new AWS.HttpRequest(endpoint);
 		req.method = 'POST';
-		req.path = '/auditing/notification';
-		req.region = 'eu-west-1';
+		req.path = path.join('/', config.index, config.document);
+		req.region = config.region;
 		req.headers['presigned-expires'] = false;
 		req.headers['Host'] = endpoint.host;
 		req.body = JSON.stringify(message);

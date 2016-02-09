@@ -75,6 +75,7 @@ describe('Auditing lambda', () => {
 	it('handles the event correctly', () => {
 		const handle = new Promise(resolve => {
 			TEST.handleRequest = (request, _, onData) => {
+				expect(request.path).to.equal('/auditing/notification');
 				expect(request.method).to.equal('POST');
 				expect(request.body).to.match(/banana@email.com/);
 
