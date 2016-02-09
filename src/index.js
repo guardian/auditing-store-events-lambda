@@ -1,25 +1,27 @@
-/* globals AWS */
 const serializer = require('thrift-serializer');
 const async = require('async');
 const Notification = require('auditing-thrift-model').Notification;
+const elasticSearch = require('./elasticSearch');
 
 exports.handler = function (event, context) {
-	// console.log('Received event:', JSON.stringify(event, null, 2));
 	async.mapSeries(event.Records, processRecord, function (err) {
 		if (err) {
 			console.error('Error processing records', err);
+			context.fail('Error when processing recors');
 		} else {
 			console.log('DONE');
+			context.succeed('Processed ' + event.Records.length + ' records.');
 		}
-
-		context.succeed('Processed ' + event.Records.length + ' records.');
 	});
 };
 
 function processRecord (record, callback) {
 	serializer.read(Notification, record.kinesis.data, function (err, message) {
-		console.log('Received notification', message);
-
-		callback(err);
+		console.log('Received notification', JSON.stringify(message));
+		if (err) {
+			callback(err);
+		} else {
+			elasticSearch(message, callback);
+		}
 	});
 }

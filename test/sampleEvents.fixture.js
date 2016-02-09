@@ -52,3 +52,13 @@ export function generateBatch () {
 		};
 	});
 };
+
+export function generateWrongSerialization () {
+	return Promise.resolve({
+		Records: [{
+			kinesis: {
+				data: 'random bytes'.toString('base64')
+			}
+		}]
+	});
+};
