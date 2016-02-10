@@ -27,7 +27,20 @@ module.exports = function (message, callback) {
 				respBody += chunk;
 			});
 			httpResp.on('end', function () {
-				process.nextTick(() => callback(null));
+				console.log('Response from ElasticSearch: ' + respBody);
+				process.nextTick(() => {
+					if (httpResp.statusCode >= 200 && httpResp.statusCode < 400) {
+						let error;
+						try {
+							error = new Error(JSON.parse(respBody).message);
+						} catch (ex) {
+							error = new Error(respBody);
+						}
+						callback(error);
+					} else {
+						callback(null);
+					}
+				});
 			});
 		}, function (err) {
 			const error = typeof err === 'string' ? new Error(err) : err;
