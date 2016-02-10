@@ -17,11 +17,17 @@ exports.handler = function (event, context) {
 
 function processRecord (record, callback) {
 	serializer.read(Notification, record.kinesis.data, function (err, message) {
-		console.log('Received notification', JSON.stringify(message));
+		const notification = {};
+		for (let key in message) {
+			if (message.hasOwnProperty(key)) {
+				notification[key] = key === 'app' ? message.getAppName() : message[key];
+			}
+		}
+		console.log('Received notification', JSON.stringify(notification));
 		if (err) {
 			callback(err);
 		} else {
-			elasticSearch(message, callback);
+			elasticSearch(notification, callback);
 		}
 	});
 }

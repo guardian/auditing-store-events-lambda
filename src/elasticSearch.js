@@ -21,13 +21,12 @@ module.exports = function (message, callback) {
 
 		const send = new AWS.NodeHttpClient();
 		send.handleRequest(req, null, function (httpResp) {
+			console.log('status code', httpResp.statusCode);
 			let respBody = '';
 			httpResp.on('data', function (chunk) {
 				respBody += chunk;
 			});
-			httpResp.on('end', function (chunk) {
-				console.log('Response from ElasticSearch: ' + respBody);
-				console.log('last chunk: ' + chunk);
+			httpResp.on('end', function () {
 				process.nextTick(() => callback(null));
 			});
 		}, function (err) {
