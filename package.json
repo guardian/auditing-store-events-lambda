@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "async": "^1.5.2",
-    "auditing-thrift-model": "0.0.3",
+    "auditing-thrift-model": "0.0.5",
     "thrift-serializer": "1.0.0"
   }
 }
