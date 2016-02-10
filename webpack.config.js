@@ -3,7 +3,7 @@ var path = require('path');
 
 var webpack = require('webpack');
 
-var banner = new webpack.BannerPlugin('var AWS = require("aw-sdk");', {
+var banner = new webpack.BannerPlugin('var AWS = require("aws-sdk");', {
 	raw: true,
 	entryOnly: true
 });
