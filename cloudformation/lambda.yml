@@ -74,6 +74,13 @@ Resources:
                         Action:
                             - "lambda:InvokeFunction"
                         Resource: "*"
+                - PolicyName: elasticSearch
+                  PolicyDocument:
+                    Statement:
+                        Effect: Allow
+                        Action:
+                            - "es:ESHttpPost"
+                        Resource: "arn:aws:es:::domain/auditing/auditing/notification"
     Lambda:
         Type: AWS::Lambda::Function
         Properties:
