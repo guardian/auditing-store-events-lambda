@@ -13,10 +13,10 @@ packages:
             templateStageParameters:
                 CODE:
                     Stage: CODE
-                    EventSourceKinesisStream: <%= secrets["event-source-CODE"] %>
+                    EventSourceKinesisStream: auditing-CODE
                 PROD:
                     Stage: PROD
-                    EventSourceKinesisStream: <%= secrets["event-source-PROD"] %>
+                    EventSourceKinesisStream: auditing-PROD
     s3:
         type: aws-s3
         data:
