@@ -48,5 +48,4 @@ recipes:
     default:
         depends:
             - upload
-            - cloudform
             - lambda
