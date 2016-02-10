@@ -7,6 +7,7 @@ AWS Lambda runs on node.js 0.10. This package allows you to write ES6 code, comp
 Compilation is done with `babel` and packaging with `webpack`.
 
 `src/index.js` is the entry point of your lambda function. Because AWS already provides you with `aws-sdk` you don't need to depend on it, it's already available on the global variable `AWS`.
+
 Any other dependency must be declared in `package.json` inside `dependencies` and will be packaged by `webpack`.
 
 # Test
