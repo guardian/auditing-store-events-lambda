@@ -60,6 +60,10 @@ gulp.task('riffraff', function () {
 			return fetchFromS3('lambda-private', 'auditing-lambda.secrets.json')
 			.then(function (secrets) {
 				return { secrets: secrets };
+			}, function (err) {
+				// This is not handled correctly in node 0.10, .catch is never called
+				console.err(err);
+				throw err;
 			});
 		}))
 		.pipe(template())
