@@ -1,6 +1,15 @@
 {
 	"env": {
-		"node": true
+		"node": true,
+		"es6": true
+	},
+	"extends": "eslint:recommended",
+	"parserOptions": {
+		"ecmaVersion": 6,
+		"ecmaFeatures": {
+			"globalReturn": true,
+		},
+		"sourceType": "module"
 	},
 	"rules": {
 		"camelcase": 2,
@@ -9,6 +18,7 @@
 		"new-cap": 0,
 		"no-alert": 0,
 		"no-caller": 2,
+		"no-console": 0,
 		"no-multi-spaces": 0,
 		"no-shadow": 0,
 		"no-undef": 2,
@@ -17,34 +27,9 @@
 		"no-use-before-define": [2, "nofunc"],
 		"quotes": [1, "single"],
 		"semi": 2,
-		"space-after-keywords": 2,
+		"keyword-spacing": [2, {"before": true, "after": true}],
 		"space-before-function-paren": 1,
-		"space-before-keywords": [2, "always"],
 		"strict": 2
-	},
-	"ecmaFeatures": {
-		"arrowFunctions": true,
-		"binaryLiterals": true,
-		"blockBindings": true,
-		"classes": true,
-		"defaultParams": true,
-		"destructuring": true,
-		"forOf": true,
-		"generators": true,
-		"globalReturn": true,
-		"modules": true,
-		"objectLiteralComputedProperties": true,
-		"objectLiteralDuplicateProperties": true,
-		"objectLiteralShorthandMethods": true,
-		"objectLiteralShorthandProperties": true,
-		"octalLiterals": true,
-		"regexUFlag": true,
-		"regexYFlag": true,
-		"restParams": true,
-		"spread": true,
-		"superInFunctions": true,
-		"templateStrings": true,
-		"unicodeCodePointEscapes": true
 	},
 	"globals": {
 		"Promise": true
