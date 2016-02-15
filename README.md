@@ -10,11 +10,21 @@ Compilation is done with `babel` and packaging with `webpack`.
 
 Any other dependency must be declared in `package.json` inside `dependencies` and will be packaged by `webpack`.
 
+# Elastic search
+
+This lamba sends events to elasticsearch, you can configure the endpoint in `src/config.json` and the elasticsearch domain by sending `POST` request to the endpoints inside folder `elasticsearch`
+
+```
+curl -XPOST https://endpoint.es.amazonaws.com/_template/operations -d @elasticsearch/_template/operations
+```
+
 # Test
 
 You can test the lambda with `mocha` running `npm test`.
 
 `test/specs/index.js` is the main spec file, the lambda will be called with sample events defined in `sampleEvents.fixture.js`
+
+While developing you can run `mocha --watch`
 
 # Deploy
 

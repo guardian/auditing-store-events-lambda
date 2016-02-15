@@ -1,0 +1,17 @@
+{
+	"template": "extras-*",
+	"order": 1,
+	"settings": {
+		"number_of_shards": 1
+	},
+	"mappings": {
+		"_default_": {
+			"_all": {
+				"enabled": false
+			}
+		}
+	},
+	"aliases": {
+		"last_month": {}
+	}
+}
