@@ -1,8 +1,16 @@
 {
 	"elasticSearch": {
 		"endpoint": "search-auditing-3plcaurilp4l5wra76vqzfyrsy.eu-west-1.es.amazonaws.com",
-		"index": "auditing",
-		"document": "notification",
 		"region": "eu-west-1"
+	},
+	"models": {
+		"operations": {
+			"index": "operations",
+			"mapping": "action"
+		},
+		"extra": {
+			"index": "extras",
+			"mapping": "sensitive"
+		}
 	}
 }

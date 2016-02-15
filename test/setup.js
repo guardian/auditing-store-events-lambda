@@ -19,7 +19,9 @@ global.TEST = {
 
 global.AWS = {
 	Endpoint: sandbox.stub(),
-	HttpRequest: sandbox.stub().returns({ headers: {} }),
+	HttpRequest: function () {
+		this.headers = {};
+	},
 	EnvironmentCredentials: sandbox.stub(),
 	Signers: {
 		V4: sandbox.stub().returns({ addAuthorization: sandbox.stub() })

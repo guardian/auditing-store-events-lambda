@@ -1,13 +1,14 @@
-const serializer = require('thrift-serializer');
-const async = require('async');
-const Notification = require('auditing-thrift-model').Notification;
-const elasticSearch = require('./elasticSearch');
+import {read} from 'thrift-serializer';
+import {mapSeries} from 'async';
+import {Notification} from 'auditing-thrift-model';
+import elasticSearch from './elasticSearch';
+import indices from './indices';
 
 exports.handler = function (event, context) {
-	async.mapSeries(event.Records, processRecord, function (err) {
+	mapSeries(event.Records, processRecord, function (err) {
 		if (err) {
 			console.error('Error processing records', err);
-			context.fail('Error when processing recors');
+			context.fail('Error when processing records');
 		} else {
 			console.log('DONE');
 			context.succeed('Processed ' + event.Records.length + ' records.');
@@ -16,18 +17,43 @@ exports.handler = function (event, context) {
 };
 
 function processRecord (record, callback) {
-	serializer.read(Notification, record.kinesis.data, function (err, message) {
-		const notification = {};
-		for (let key in message) {
-			if (message.hasOwnProperty(key)) {
-				notification[key] = key === 'app' ? message.getAppName() : message[key];
-			}
-		}
-		console.log('Received notification', JSON.stringify(notification));
+	read(Notification, record.kinesis.data, function (err, message) {
+		console.log('Received notification', JSON.stringify(message));
 		if (err) {
 			callback(err);
 		} else {
-			elasticSearch(notification, callback);
+			storeOperation(message, callback);
 		}
+	});
+}
+
+function storeOperation (notification, callback) {
+	const operationPath = indices.operation(notification.date);
+	elasticSearch({
+		app: notification.getAppName(),
+		operation: notification.operation,
+		date: notification.date,
+		resourceId: notification.resourceId
+	}, operationPath, function (err, record) {
+		if (err) {
+			callback(err);
+		} else {
+			storeAdditionalData(record._id, notification, callback);
+		}
+	});
+}
+
+function storeAdditionalData (id, notification, callback) {
+	// Ignore errors for additional sensitive data
+	const extraPath = indices.extra(notification.date);
+	elasticSearch({
+		action: id,
+		email: notification.userEmail,
+		message: notification.message
+	}, extraPath, function (err) {
+		if (err) {
+			console.error('Error while storing additional data', err);
+		}
+		callback(null);
 	});
 }

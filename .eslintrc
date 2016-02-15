@@ -12,7 +12,7 @@
 		"no-multi-spaces": 0,
 		"no-shadow": 0,
 		"no-undef": 2,
-		"no-underscore-dangle": 1,
+		"no-underscore-dangle": 0,
 		"no-unused-vars": 2,
 		"no-use-before-define": [2, "nofunc"],
 		"quotes": [1, "single"],

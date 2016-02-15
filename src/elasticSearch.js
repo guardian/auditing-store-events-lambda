@@ -1,14 +1,13 @@
 /* globals AWS */
-import path from 'path';
 import {elasticSearch as config} from './config';
 
-module.exports = function (message, callback) {
+module.exports = function (message, path, callback) {
 	try {
 		const endpoint = new AWS.Endpoint(config.endpoint);
 
 		const req = new AWS.HttpRequest(endpoint);
 		req.method = 'POST';
-		req.path = path.join('/', config.index, config.document);
+		req.path = path;
 		req.region = config.region;
 		req.headers['presigned-expires'] = false;
 		req.headers['Host'] = endpoint.host;
@@ -20,27 +19,28 @@ module.exports = function (message, callback) {
 		signer.addAuthorization(creds, new Date());
 
 		const send = new AWS.NodeHttpClient();
+		console.log('Sending Elastic search request to ' + req.path + '\n' + req.body);
 		send.handleRequest(req, null, function (httpResp) {
-			console.log('status code', httpResp.statusCode);
 			let respBody = '';
 			httpResp.on('data', function (chunk) {
 				respBody += chunk;
 			});
 			httpResp.on('end', function () {
-				console.log('Response from ElasticSearch: ' + respBody);
-				process.nextTick(() => {
+				console.log('Response from ElasticSearch: [' + httpResp.statusCode + '] ' + respBody);
+				try {
+					const response = JSON.parse(respBody);
 					if (httpResp.statusCode >= 200 && httpResp.statusCode < 400) {
-						let error;
-						try {
-							error = new Error(JSON.parse(respBody).message);
-						} catch (ex) {
-							error = new Error(respBody);
-						}
-						callback(error);
+						process.nextTick(() => {
+							callback(null, response);
+						});
 					} else {
-						callback(null);
+						process.nextTick(() => {
+							callback(new Error(response.message));
+						});
 					}
-				});
+				} catch (ex) {
+					callback(new Error(respBody));
+				}
 			});
 		}, function (err) {
 			const error = typeof err === 'string' ? new Error(err) : err;

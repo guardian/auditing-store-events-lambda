@@ -41,10 +41,10 @@ export function generateBatch () {
 		kinesisRecord(1, {
 			app: App.FaciaTool,
 			operation: 'Remove',
-			userEmail: 'banana@email.com',
+			userEmail: 'apple@email.com',
 			date: new Date('2016-2-3').toISOString(),
 			resourceId: 'front',
-			message: JSON.stringify({ collections: ['two'] })
+			message: JSON.stringify({ collections: ['three'] })
 		})
 	]).then(records => {
 		return {
