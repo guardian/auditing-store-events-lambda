@@ -3,6 +3,7 @@ import {mapSeries} from 'async';
 import {Notification} from 'auditing-thrift-model';
 import elasticSearch from './elasticSearch';
 import indices from './indices';
+import {STAGE} from './environment';
 
 exports.handler = function (event, context) {
 	mapSeries(event.Records, processRecord, function (err) {
@@ -33,7 +34,8 @@ function storeOperation (notification, callback) {
 		app: notification.getAppName(),
 		operation: notification.operation,
 		date: notification.date,
-		resourceId: notification.resourceId
+		resourceId: notification.resourceId,
+		stage: STAGE
 	}, operationPath, function (err, record) {
 		if (err) {
 			callback(err);
