@@ -80,7 +80,7 @@ Resources:
                         Effect: Allow
                         Action:
                             - "es:ESHttpPost"
-                        Resource: "arn:aws:es:::domain/auditing/auditing/notification"
+                        Resource: "arn:aws:es:eu-west-1:163592447864:domain/auditing/*"
     Lambda:
         Type: AWS::Lambda::Function
         Properties:
