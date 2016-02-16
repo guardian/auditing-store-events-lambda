@@ -1,12 +1,12 @@
 import {read} from 'thrift-serializer';
-import {mapSeries} from 'async';
+import {mapLimit} from 'async';
 import {Notification} from 'auditing-thrift-model';
 import elasticSearch from './elasticSearch';
 import indices from './indices';
 import {STAGE} from './environment';
 
 exports.handler = function (event, context) {
-	mapSeries(event.Records, processRecord, function (err) {
+	mapLimit(event.Records, 3, processRecord, function (err) {
 		if (err) {
 			console.error('Error processing records', err);
 			context.fail('Error when processing records');
