@@ -98,11 +98,11 @@ Resources:
             Role:
                 "Fn::GetAtt": ["ExecutionRole", "Arn"]
             Runtime: nodejs
-            Timeout: 5
+            Timeout: 60
     EventSource:
         Type: AWS::Lambda::EventSourceMapping
         Properties:
-            BatchSize: 50
+            BatchSize: 100
             Enabled: true
             EventSourceArn:
                 *kinesisArn
