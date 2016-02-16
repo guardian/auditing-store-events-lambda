@@ -51,7 +51,7 @@ export function generateBatch () {
 			Records: records
 		};
 	});
-};
+}
 
 export function generateWrongSerialization () {
 	return Promise.resolve({
@@ -61,4 +61,4 @@ export function generateWrongSerialization () {
 			}
 		}]
 	});
-};
+}
