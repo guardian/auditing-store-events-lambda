@@ -36,7 +36,7 @@ export function generateBatch () {
 			userEmail: 'banana@email.com',
 			date: new Date('2016-2-2').toISOString(),
 			resourceId: 'front',
-			message: JSON.stringify({ collections: ['one', 'two'] })
+			shortMessage: JSON.stringify({ collections: ['one', 'two'] })
 		}),
 		kinesisRecord(1, {
 			app: App.FaciaTool,
@@ -44,7 +44,7 @@ export function generateBatch () {
 			userEmail: 'apple@email.com',
 			date: new Date('2016-2-3').toISOString(),
 			resourceId: 'front',
-			message: JSON.stringify({ collections: ['three'] })
+			shortMessage: JSON.stringify({ collections: ['three'] })
 		})
 	]).then(records => {
 		return {

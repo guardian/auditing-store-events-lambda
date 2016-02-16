@@ -36,7 +36,8 @@ function storeOperation (notification, callback) {
 		operation: notification.operation,
 		date: notification.date,
 		resourceId: notification.resourceId,
-		message: notification.message
+		message: notification.shortMessage,
+		expiryDate: notification.expiryDate
 	}, operationPath, function (err, record) {
 		if (err) {
 			callback(err);
@@ -51,7 +52,8 @@ function storeAdditionalData (id, notification, callback) {
 	const extraPath = indices.extra(notification.date);
 	elasticSearch({
 		action: id,
-		email: notification.userEmail
+		email: notification.userEmail,
+		message: notification.message
 	}, extraPath, function (err) {
 		if (err) {
 			console.error('Error while storing additional data', err);

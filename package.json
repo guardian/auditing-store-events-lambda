@@ -32,7 +32,7 @@
     "gulp-zip": "^3.1.0",
     "json-loader": "^0.5.4",
     "mocha": "^2.4.5",
-    "node-riffraff-artefact": "^1.6.2",
+    "node-riffraff-artefact": "^1.6.5",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0",
     "thrift": "^0.9.3",
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "async": "^1.5.2",
-    "auditing-thrift-model": "0.0.5",
+    "auditing-thrift-model": "0.1.0",
     "thrift-serializer": "1.0.0"
   }
 }
