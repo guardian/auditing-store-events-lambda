@@ -19,14 +19,12 @@ module.exports = function (message, path, callback) {
 		signer.addAuthorization(creds, new Date());
 
 		const send = new AWS.NodeHttpClient();
-		console.log('Sending Elastic search request to ' + req.path + '\n' + req.body);
 		send.handleRequest(req, null, function (httpResp) {
 			let respBody = '';
 			httpResp.on('data', function (chunk) {
 				respBody += chunk;
 			});
 			httpResp.on('end', function () {
-				console.log('Response from ElasticSearch: [' + httpResp.statusCode + '] ' + respBody);
 				try {
 					const response = JSON.parse(respBody);
 					if (httpResp.statusCode >= 200 && httpResp.statusCode < 400) {

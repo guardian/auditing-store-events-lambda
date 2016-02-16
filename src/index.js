@@ -6,7 +6,9 @@ import indices from './indices';
 import {STAGE} from './environment';
 
 exports.handler = function (event, context) {
-	mapLimit(event.Records, 3, processRecord, function (err) {
+	const job = { started: 0, completed: 0, total: event.Records.length };
+
+	mapLimit(event.Records, 3, processRecord.bind(job), function (err) {
 		if (err) {
 			console.error('Error processing records', err);
 			context.fail('Error when processing records');
@@ -18,12 +20,24 @@ exports.handler = function (event, context) {
 };
 
 function processRecord (record, callback) {
+	const job = this;
+	const jobId = ++job.started;
+
+	console.log('Process job ' + jobId + ' in ' + record.kinesis.sequenceNumber);
+
 	read(Notification, record.kinesis.data, function (err, message) {
-		console.log('Received notification', JSON.stringify(message));
 		if (err) {
+			job.completed += 1;
+			console.error('Unable to read thrift message', err);
 			callback(err);
 		} else {
-			storeOperation(message, callback);
+			storeOperation(message, (err) => {
+				job.completed += 1;
+				if (err) {
+					console.error('Error while processing ' + jobId + ' in ' + record.kinesis.sequenceNumber, err);
+				}
+				callback(err);
+			});
 		}
 	});
 }
