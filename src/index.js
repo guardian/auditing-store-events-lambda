@@ -32,10 +32,11 @@ function storeOperation (notification, callback) {
 	const operationPath = indices.operation(notification.date);
 	elasticSearch({
 		app: notification.getAppName(),
+		stage: STAGE,
 		operation: notification.operation,
 		date: notification.date,
 		resourceId: notification.resourceId,
-		stage: STAGE
+		message: notification.message
 	}, operationPath, function (err, record) {
 		if (err) {
 			callback(err);
@@ -50,8 +51,7 @@ function storeAdditionalData (id, notification, callback) {
 	const extraPath = indices.extra(notification.date);
 	elasticSearch({
 		action: id,
-		email: notification.userEmail,
-		message: notification.message
+		email: notification.userEmail
 	}, extraPath, function (err) {
 		if (err) {
 			console.error('Error while storing additional data', err);

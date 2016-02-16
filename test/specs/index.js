@@ -110,22 +110,24 @@ describe('Auditing lambda', () => {
 			expect(handledRequests[0]).to.have.property('path').that.equal('/operations_2016_02_02/action');
 			expect(handledRequests[0]).to.have.property('method').that.equal('POST');
 			expect(handledRequests[0]).to.have.property('body').that.match(/faciatool.+update/i);
+			expect(handledRequests[0]).to.have.property('body').that.match(/two/i);
 			expect(handledRequests[0]).to.have.property('body').that.not.match(/email\.com/);
 
 			expect(handledRequests[1]).to.have.property('path').that.equal('/extras_2016_02_02/sensitive');
 			expect(handledRequests[1]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[1]).to.have.property('body').that.match(/two/i);
+			expect(handledRequests[1]).to.have.property('body').that.not.match(/two/i);
 			expect(handledRequests[1]).to.have.property('body').that.match(/banana@email\.com/);
 			expect(handledRequests[1]).to.have.property('body').that.match(/98761/);
 
 			expect(handledRequests[2]).to.have.property('path').that.equal('/operations_2016_02_03/action');
 			expect(handledRequests[2]).to.have.property('method').that.equal('POST');
 			expect(handledRequests[2]).to.have.property('body').that.match(/faciatool.+remove/i);
+			expect(handledRequests[2]).to.have.property('body').that.match(/three/i);
 			expect(handledRequests[2]).to.have.property('body').that.not.match(/email\.com/);
 
 			expect(handledRequests[3]).to.have.property('path').that.equal('/extras_2016_02_03/sensitive');
 			expect(handledRequests[3]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[3]).to.have.property('body').that.match(/three/i);
+			expect(handledRequests[3]).to.have.property('body').that.not.match(/three/i);
 			expect(handledRequests[3]).to.have.property('body').that.match(/apple@email\.com/);
 			expect(handledRequests[3]).to.have.property('body').that.match(/98763/);
 		});
