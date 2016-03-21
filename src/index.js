@@ -67,7 +67,12 @@ function storeAdditionalData (id, notification, callback) {
 	elasticSearch({
 		action: id,
 		email: notification.userEmail,
-		message: notification.message
+		message: notification.message,
+		app: notification.getAppName(),
+		stage: STAGE,
+		operation: notification.operation,
+		date: notification.date,
+		resourceId: notification.resourceId
 	}, extraPath, function (err) {
 		if (err) {
 			console.error('Error while storing additional data', err);
