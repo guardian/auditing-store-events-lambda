@@ -1,5 +1,5 @@
 {
-	"template": "operations-*",
+	"template": "operations_*",
 	"order": 1,
 	"settings": {
 		"number_of_shards": 1
@@ -9,7 +9,7 @@
 			"_all": {
 				"enabled": false,
 				"properties": {
-					"email": {
+					"app": {
 						"type": "string",
 						"index": "not_analyzed"
 					}
