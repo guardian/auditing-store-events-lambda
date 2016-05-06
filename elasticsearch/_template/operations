@@ -7,17 +7,18 @@
 	"mappings": {
 		"_default_": {
 			"_all": {
-				"enabled": false,
-				"properties": {
-					"app": {
-						"type": "string",
-						"index": "not_analyzed"
-					}
+				"enabled": false
+			},
+			"properties": {
+				"app": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"resourceId": {
+					"type": "string",
+					"index": "not_analyzed"
 				}
 			}
 		}
-	},
-	"aliases": {
-		"last_month": {}
 	}
 }
