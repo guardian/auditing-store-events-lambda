@@ -1,7 +1,7 @@
 {
   "name": "auditing-store-events-lambda",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Lambda to store auditing events coming from a Kinesis stream",
   "license": "Apache-2.0",
   "repository": {
