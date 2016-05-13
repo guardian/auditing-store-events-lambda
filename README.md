@@ -2,7 +2,7 @@
 
 # Architecture
 
-AWS Lambda runs on node.js 0.10. This package allows you to write ES6 code, compile, package and deploy through RiffRaff.
+AWS Lambda runs on node.js 4.3. This package allows you to write ES6 code, compile, package and deploy through RiffRaff.
 
 Compilation is done with `babel` and packaging with `webpack`.
 

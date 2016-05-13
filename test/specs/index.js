@@ -1,88 +1,66 @@
 /* globals TEST */
-import {expect} from 'chai';
-import {EventEmitter} from 'events';
+const expect = require('chai').expect;
+const EventEmitter = require('events').EventEmitter;
 
-import {generateBatch, generateWrongSerialization} from '../sampleEvents.fixture';
-import run from '../context.mock';
+const generateBatch = require('../sampleEvents.fixture').generateBatch;
+const generateWrongSerialization = require('../sampleEvents.fixture').generateWrongSerialization;
 
-import {handler as lambda} from '../../src/index';
+const lambda = require('../../src/index').handler;
 
 after(() => TEST.sandbox.restore());
 
 describe('Auditing lambda', () => {
-	afterEach(() => {
-		TEST.console.error.reset();
-		TEST.console.log.reset();
-	});
-
-	it('fails serialization', () => {
-		return generateWrongSerialization()
+	it('fails serialization', done => {
+		generateWrongSerialization()
 		.then(events => {
-			return run(lambda, events);
-		})
-		.catch(error => {
-			expect(error).to.match(/when processing/i);
-			const [errorMessage, exception] = TEST.console.error.lastCall.args;
-			expect(errorMessage).to.match(/error processing/i);
-			expect(exception.message).to.match(/unable to understand/i);
+			lambda(events, {}, error => {
+				expect(error).to.match(/unable to understand/i);
+				done();
+			});
 		});
 	});
 
-	it('fails on HTTP client error', () => {
-		const handle = new Promise(resolve => {
+	it('fails on HTTP client error', done => {
+		generateBatch()
+		.then(events => {
 			TEST.handleRequest = (request, _, onData, onError) => {
 				process.nextTick(() => {
 					onError('invalid anything');
-					resolve();
 				});
 			};
-		});
 
-		return generateBatch()
-		.then(events => {
-			return run(lambda, events);
-		})
-		.then(handle)
-		.catch(error => {
-			expect(error).to.match(/when processing/i);
-			const [errorMessage, exception] = TEST.console.error.lastCall.args;
-			expect(errorMessage).to.match(/error processing/i);
-			expect(exception.message).to.match(/invalid anything/i);
+			lambda(events, {}, error => {
+				expect(error).to.match(/invalid anything/i);
+				done();
+			});
 		});
 	});
 
-	it('fails on AWS exceptions', () => {
-		const handle = new Promise(resolve => {
+	it('fails on AWS exceptions', done => {
+		generateBatch()
+		.then(events => {
 			TEST.handleRequest = () => {
-				resolve();
 				throw new Error('exception here');
 			};
-		});
 
-		return generateBatch()
-		.then(events => {
-			return run(lambda, events);
-		})
-		.then(handle)
-		.catch(error => {
-			expect(error).to.match(/when processing/i);
-			const [errorMessage, exception] = TEST.console.error.lastCall.args;
-			expect(errorMessage).to.match(/error processing/i);
-			expect(exception.message).to.match(/exception here/i);
+			lambda(events, {}, error => {
+				expect(error).to.match(/exception here/i);
+				done();
+			});
 		});
 	});
 
-	it('handles the event correctly', () => {
+	it('handles the event correctly', done => {
 		const handledRequests = [];
-		const handle = new Promise(resolve => {
+
+		generateBatch()
+		.then(events => {
 			TEST.handleRequest = (request, _, onData) => {
 				handledRequests.push(request);
 
 				const emitter = new EventEmitter();
 				emitter.statusCode = 200;
 				onData(emitter);
-
-				resolve();
 
 				process.nextTick(() => {
 					emitter.emit('data', JSON.stringify({
@@ -95,47 +73,48 @@ describe('Auditing lambda', () => {
 					emitter.emit('end');
 				});
 			};
-		});
 
-		return generateBatch()
-		.then(events => run(lambda, events))
-		.then(result => {
-			expect(result).to.match(/processed 2/i);
-		})
-		.then(handle)
-		.then(() => {
-			// Every record updates two indices
-			expect(handledRequests).to.have.length(4);
+			lambda(events, {}, (error, result) => {
+				expect(error).to.equal(null);
+				expect(result).to.match(/processed 2/i);
 
-			expect(handledRequests[0]).to.have.property('path').that.equal('/operations_2016_02_02/action');
-			expect(handledRequests[0]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[0]).to.have.property('body').that.match(/faciatool.+update/i);
-			expect(handledRequests[0]).to.have.property('body').that.match(/two/i);
-			expect(handledRequests[0]).to.have.property('body').that.not.match(/email\.com/);
+				// Every record updates two indices
+				expect(handledRequests).to.have.length(4);
 
-			expect(handledRequests[1]).to.have.property('path').that.equal('/extras_2016_02_02/sensitive');
-			expect(handledRequests[1]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[1]).to.have.property('body').that.not.match(/two/i);
-			expect(handledRequests[1]).to.have.property('body').that.match(/banana@email\.com/);
-			expect(handledRequests[1]).to.have.property('body').that.match(/98761/);
+				expect(handledRequests[0]).to.have.property('path').that.equal('/operations_2016_02_02/action');
+				expect(handledRequests[0]).to.have.property('method').that.equal('POST');
+				expect(handledRequests[0]).to.have.property('body').that.match(/faciatool.+update/i);
+				expect(handledRequests[0]).to.have.property('body').that.match(/two/i);
+				expect(handledRequests[0]).to.have.property('body').that.not.match(/email\.com/);
 
-			expect(handledRequests[2]).to.have.property('path').that.equal('/operations_2016_02_03/action');
-			expect(handledRequests[2]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[2]).to.have.property('body').that.match(/faciatool.+remove/i);
-			expect(handledRequests[2]).to.have.property('body').that.match(/three/i);
-			expect(handledRequests[2]).to.have.property('body').that.not.match(/email\.com/);
+				expect(handledRequests[1]).to.have.property('path').that.equal('/extras_2016_02_02/sensitive');
+				expect(handledRequests[1]).to.have.property('method').that.equal('POST');
+				expect(handledRequests[1]).to.have.property('body').that.not.match(/two/i);
+				expect(handledRequests[1]).to.have.property('body').that.match(/banana@email\.com/);
+				expect(handledRequests[1]).to.have.property('body').that.match(/98761/);
 
-			expect(handledRequests[3]).to.have.property('path').that.equal('/extras_2016_02_03/sensitive');
-			expect(handledRequests[3]).to.have.property('method').that.equal('POST');
-			expect(handledRequests[3]).to.have.property('body').that.not.match(/three/i);
-			expect(handledRequests[3]).to.have.property('body').that.match(/apple@email\.com/);
-			expect(handledRequests[3]).to.have.property('body').that.match(/98763/);
+				expect(handledRequests[2]).to.have.property('path').that.equal('/operations_2016_02_03/action');
+				expect(handledRequests[2]).to.have.property('method').that.equal('POST');
+				expect(handledRequests[2]).to.have.property('body').that.match(/faciatool.+remove/i);
+				expect(handledRequests[2]).to.have.property('body').that.match(/three/i);
+				expect(handledRequests[2]).to.have.property('body').that.not.match(/email\.com/);
+
+				expect(handledRequests[3]).to.have.property('path').that.equal('/extras_2016_02_03/sensitive');
+				expect(handledRequests[3]).to.have.property('method').that.equal('POST');
+				expect(handledRequests[3]).to.have.property('body').that.not.match(/three/i);
+				expect(handledRequests[3]).to.have.property('body').that.match(/apple@email\.com/);
+				expect(handledRequests[3]).to.have.property('body').that.match(/98763/);
+
+				done();
+			});
 		});
 	});
 
-	it('ignores errors while storing additional data', function () {
+	it('ignores errors while storing additional data', done => {
 		const handledRequests = [];
-		const handle = new Promise(resolve => {
+
+		generateBatch()
+		.then(events => {
 			TEST.handleRequest = (request, _, onData) => {
 				handledRequests.push(request);
 
@@ -143,8 +122,6 @@ describe('Auditing lambda', () => {
 				const emitter = new EventEmitter();
 				emitter.statusCode = isSensitive ? 400 : 200;
 				onData(emitter);
-
-				resolve();
 
 				process.nextTick(() => {
 					const message = isSensitive ? {
@@ -160,21 +137,19 @@ describe('Auditing lambda', () => {
 					emitter.emit('end');
 				});
 			};
-		});
 
-		return generateBatch()
-		.then(events => run(lambda, events))
-		.then(result => {
-			expect(result).to.match(/processed 2/i);
-		})
-		.then(handle)
-		.then(() => {
-			// Every record updates two indices
-			expect(handledRequests).to.have.length(4);
+			lambda(events, {}, (error, result) => {
+				expect(result).to.match(/processed 2/i);
 
-			const [errorMessage, exception] = TEST.console.error.lastCall.args;
-			expect(errorMessage).to.match(/error .+ storing additional/i);
-			expect(exception.message).to.match(/something bad .* sensitive/i);
+				// Every record updates two indices, but some fail
+				expect(handledRequests).to.have.length(4);
+
+				const [errorMessage, exception] = TEST.console.error.lastCall.args;
+				expect(errorMessage).to.match(/error .+ storing additional/i);
+				expect(exception.message).to.match(/something bad .* sensitive/i);
+
+				done();
+			});
 		});
 	});
 });

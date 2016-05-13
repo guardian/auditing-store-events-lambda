@@ -5,22 +5,15 @@ import elasticSearch from './elasticSearch';
 import indices from './indices';
 import {STAGE} from './environment';
 
-exports.handler = function (event, context) {
+exports.handler = function (event, context, callback) {
 	const job = { started: 0, completed: 0, total: event.Records.length };
 
-	mapLimit(event.Records, 3, processRecord.bind(job), function (err) {
-		if (err) {
-			console.error('Error processing records', err);
-			context.fail('Error when processing records');
-		} else {
-			console.log('DONE');
-			context.succeed('Processed ' + event.Records.length + ' records.');
-		}
+	mapLimit(event.Records, 3, (...args) => processRecord(...args, job), err => {
+		callback(err, 'DONE - Processed ' + event.Records.length + ' records.');
 	});
 };
 
-function processRecord (record, callback) {
-	const job = this;
+function processRecord (record, callback, job) {
 	const jobId = ++job.started;
 
 	console.log('Process job ' + jobId + ' in ' + record.kinesis.sequenceNumber);
