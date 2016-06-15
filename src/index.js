@@ -68,7 +68,7 @@ function storeAdditionalData (id, notification, callback) {
 		resourceId: notification.resourceId
 	}, extraPath, function (err) {
 		if (err) {
-			console.error('Error while storing additional data', err);
+			console.error('Error while storing additional data', err.message);
 		}
 		callback(null);
 	});

@@ -14,11 +14,31 @@
 					"type": "string",
 					"index": "not_analyzed"
 				},
+				"action": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"date": {
+					"type": "date",
+					"format": "date_time"
+				},
+				"message": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"operation": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
 				"email": {
 					"type": "string",
 					"index": "not_analyzed"
 				},
 				"resourceId": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"stage": {
 					"type": "string",
 					"index": "not_analyzed"
 				}

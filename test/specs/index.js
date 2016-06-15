@@ -146,7 +146,7 @@ describe('Auditing lambda', () => {
 
 				const [errorMessage, exception] = TEST.console.error.lastCall.args;
 				expect(errorMessage).to.match(/error .+ storing additional/i);
-				expect(exception.message).to.match(/something bad .* sensitive/i);
+				expect(exception).to.match(/something bad .* sensitive/i);
 
 				done();
 			});
