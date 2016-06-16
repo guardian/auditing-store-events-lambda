@@ -1,80 +1,65 @@
-/* globals TEST */
 const expect = require('chai').expect;
-const EventEmitter = require('events').EventEmitter;
+const sinon = require('sinon');
 
 const generateBatch = require('../sampleEvents.fixture').generateBatch;
 const generateWrongSerialization = require('../sampleEvents.fixture').generateWrongSerialization;
 
-const lambda = require('../../src/index').handler;
-
-after(() => TEST.sandbox.restore());
+const lambda = require('../../src/index').processRecordsBatch;
 
 describe('Auditing lambda', () => {
+	const logger = {
+		info: sinon.spy(),
+		error: sinon.spy()
+	};
+	afterEach(() => {
+		logger.info.reset();
+		logger.error.reset();
+	});
+
 	it('fails serialization', done => {
 		generateWrongSerialization()
-		.then(events => {
-			lambda(events, {}, error => {
+		.then(event => {
+			lambda({event, logger, callback (error) {
 				expect(error).to.match(/unable to understand/i);
 				done();
-			});
+			}});
 		});
 	});
 
 	it('fails on HTTP client error', done => {
-		generateBatch()
-		.then(events => {
-			TEST.handleRequest = (request, _, onData, onError) => {
-				process.nextTick(() => {
-					onError('invalid anything');
-				});
-			};
+		const elastic = {
+			send (request, callback) {
+				process.nextTick(() => callback(new Error('invalid anything')));
+			}
+		};
 
-			lambda(events, {}, error => {
+		generateBatch()
+		.then(event => {
+			lambda({event, logger, elastic, callback (error) {
 				expect(error).to.match(/invalid anything/i);
 				done();
-			});
-		});
-	});
-
-	it('fails on AWS exceptions', done => {
-		generateBatch()
-		.then(events => {
-			TEST.handleRequest = () => {
-				throw new Error('exception here');
-			};
-
-			lambda(events, {}, error => {
-				expect(error).to.match(/exception here/i);
-				done();
-			});
+			}});
 		});
 	});
 
 	it('handles the event correctly', done => {
 		const handledRequests = [];
+		const elastic = {
+			send (request, callback) {
+				handledRequests.push(request);
+				process.nextTick(() => callback(null, {
+					_index: request.path.split('/')[1],
+					_type: 'action',
+					_id: '9876' + handledRequests.length,
+					_version: 1,
+					_created: true
+				}));
+			}
+		};
 
 		generateBatch()
-		.then(events => {
-			TEST.handleRequest = (request, _, onData) => {
-				handledRequests.push(request);
-
-				const emitter = new EventEmitter();
-				emitter.statusCode = 200;
-				onData(emitter);
-
-				process.nextTick(() => {
-					emitter.emit('data', JSON.stringify({
-						_index: request.path.split('/')[1],
-						_type: 'action',
-						_id: '9876' + handledRequests.length,
-						_version: 1,
-						_created: true
-					}));
-					emitter.emit('end');
-				});
-			};
-
-			lambda(events, {}, (error, result) => {
+		.then(event => {
+			lambda({event, logger, elastic, callback (error, result) {
 				expect(error).to.equal(null);
 				expect(result).to.match(/processed 2/i);
 
@@ -83,73 +68,100 @@ describe('Auditing lambda', () => {
 
 				expect(handledRequests[0]).to.have.property('path').that.equal('/operations_2016_02_02/action');
 				expect(handledRequests[0]).to.have.property('method').that.equal('POST');
-				expect(handledRequests[0]).to.have.property('body').that.match(/faciatool.+update/i);
-				expect(handledRequests[0]).to.have.property('body').that.match(/two/i);
-				expect(handledRequests[0]).to.have.property('body').that.not.match(/email\.com/);
+				expect(handledRequests[0]).to.have.property('message').that.deep.equal({
+					app: 'FaciaTool',
+					stage: 'UNKNOWN',
+					operation: 'Update',
+					date: new Date('2016-2-2').toISOString(),
+					resourceId: 'front',
+					message: JSON.stringify({ collections: ['one', 'two'] }),
+					expiryDate: null
+				});
 
 				expect(handledRequests[1]).to.have.property('path').that.equal('/extras_2016_02_02/sensitive');
 				expect(handledRequests[1]).to.have.property('method').that.equal('POST');
-				expect(handledRequests[1]).to.have.property('body').that.not.match(/two/i);
-				expect(handledRequests[1]).to.have.property('body').that.match(/banana@email\.com/);
-				expect(handledRequests[1]).to.have.property('body').that.match(/98761/);
+				expect(handledRequests[1]).to.have.property('message').that.deep.equal({
+					app: 'FaciaTool',
+					action: '98761',
+					stage: 'UNKNOWN',
+					operation: 'Update',
+					date: new Date('2016-2-2').toISOString(),
+					resourceId: 'front',
+					message: null,
+					email: 'banana@email.com'
+				});
 
 				expect(handledRequests[2]).to.have.property('path').that.equal('/operations_2016_02_03/action');
 				expect(handledRequests[2]).to.have.property('method').that.equal('POST');
-				expect(handledRequests[2]).to.have.property('body').that.match(/faciatool.+remove/i);
-				expect(handledRequests[2]).to.have.property('body').that.match(/three/i);
-				expect(handledRequests[2]).to.have.property('body').that.not.match(/email\.com/);
+				expect(handledRequests[2]).to.have.property('message').that.deep.equal({
+					app: 'FaciaTool',
+					stage: 'UNKNOWN',
+					operation: 'Remove',
+					date: new Date('2016-2-3').toISOString(),
+					resourceId: 'front',
+					message: JSON.stringify({ collections: ['three'] }),
+					expiryDate: null
+				});
 
 				expect(handledRequests[3]).to.have.property('path').that.equal('/extras_2016_02_03/sensitive');
 				expect(handledRequests[3]).to.have.property('method').that.equal('POST');
-				expect(handledRequests[3]).to.have.property('body').that.not.match(/three/i);
-				expect(handledRequests[3]).to.have.property('body').that.match(/apple@email\.com/);
-				expect(handledRequests[3]).to.have.property('body').that.match(/98763/);
+				expect(handledRequests[3]).to.have.property('message').that.deep.equal({
+					app: 'FaciaTool',
+					action: '98763',
+					stage: 'UNKNOWN',
+					operation: 'Remove',
+					date: new Date('2016-2-3').toISOString(),
+					resourceId: 'front',
+					message: null,
+					email: 'apple@email.com'
+				});
 
 				done();
-			});
+			}});
 		});
 	});
 
 	it('ignores errors while storing additional data', done => {
 		const handledRequests = [];
-
-		generateBatch()
-		.then(events => {
-			TEST.handleRequest = (request, _, onData) => {
+		const elastic = {
+			send (request, callback) {
 				handledRequests.push(request);
-
 				const isSensitive = /sensitive/.test(request.path);
-				const emitter = new EventEmitter();
-				emitter.statusCode = isSensitive ? 400 : 200;
-				onData(emitter);
+				// TODO statusCode
+				// emitter.statusCode = isSensitive ? 400 : 200;
+				const message = isSensitive ? {
+					message: 'Something bad happened in sensitive'
+				} : {
+					_index: request.path.split('/')[1],
+					_type: 'action',
+					_id: '9876' + handledRequests.length,
+					_version: 1,
+					_created: true
+				};
 
 				process.nextTick(() => {
-					const message = isSensitive ? {
-						message: 'Something bad happened in sensitive'
-					} : {
-						_index: request.path.split('/')[1],
-						_type: 'action',
-						_id: '9876' + handledRequests.length,
-						_version: 1,
-						_created: true
-					};
-					emitter.emit('data', JSON.stringify(message));
-					emitter.emit('end');
+					if (isSensitive) {
+						callback(message);
+					} else {
+						callback(null, message);
+					}
 				});
-			};
+			}
+		};
 
-			lambda(events, {}, (error, result) => {
+		generateBatch()
+		.then(event => {
+			lambda({event, logger, elastic, callback (error, result) {
 				expect(result).to.match(/processed 2/i);
 
 				// Every record updates two indices, but some fail
 				expect(handledRequests).to.have.length(4);
 
-				const [errorMessage, exception] = TEST.console.error.lastCall.args;
+				const [errorMessage, exception] = logger.error.getCall(0).args;
 				expect(errorMessage).to.match(/error .+ storing additional/i);
 				expect(exception).to.match(/something bad .* sensitive/i);
-
 				done();
-			});
+			}});
 		});
 	});
 });

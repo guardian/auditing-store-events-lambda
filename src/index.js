@@ -1,33 +1,44 @@
+/* globals AWS */
 import {read} from 'thrift-serializer';
 import {mapLimit} from 'async';
 import {Notification} from 'auditing-thrift-model';
-import elasticSearch from './elasticSearch';
+import elasticSearch from 'lambda-elasticsearch';
+import {elasticSearch as config} from './config';
 import indices from './indices';
 import {STAGE} from './environment';
 
-exports.handler = function (event, context, callback) {
+export function handler (event, context, callback) {
+	const elastic = elasticSearch(AWS, {
+		endpoint: config.endpoint,
+		region: config.region
+	});
+
+	processRecordsBatch({event, logger: console, elastic, callback});
+}
+
+export function processRecordsBatch ({event, logger, elastic, callback}) {
 	const job = { started: 0, completed: 0, total: event.Records.length };
 
-	mapLimit(event.Records, 3, (...args) => processRecord(...args, job), err => {
+	mapLimit(event.Records, 3, (...args) => processRecord(...args, job, logger, elastic), err => {
 		callback(err, 'DONE - Processed ' + event.Records.length + ' records.');
 	});
-};
+}
 
-function processRecord (record, callback, job) {
+function processRecord (record, callback, job, logger, elastic) {
 	const jobId = ++job.started;
 
-	console.log('Process job ' + jobId + ' in ' + record.kinesis.sequenceNumber);
+	logger.info('Process job ' + jobId + ' in ' + record.kinesis.sequenceNumber);
 
 	read(Notification, record.kinesis.data, function (err, message) {
 		if (err) {
 			job.completed += 1;
-			console.error('Unable to read thrift message', err);
+			logger.error('Unable to read thrift message', err);
 			callback(err);
 		} else {
-			storeOperation(message, (err) => {
+			storeOperation(elastic, message, logger, (err) => {
 				job.completed += 1;
 				if (err) {
-					console.error('Error while processing ' + jobId + ' in ' + record.kinesis.sequenceNumber, err);
+					logger.error('Error while processing ' + jobId + ' in ' + record.kinesis.sequenceNumber, err);
 				}
 				callback(err);
 			});
@@ -35,40 +46,51 @@ function processRecord (record, callback, job) {
 	});
 }
 
-function storeOperation (notification, callback) {
+function storeOperation (elastic, notification, logger, callback) {
 	const operationPath = indices.operation(notification.date);
-	elasticSearch({
-		app: notification.getAppName(),
-		stage: STAGE,
-		operation: notification.operation,
-		date: notification.date,
-		resourceId: notification.resourceId,
-		message: notification.shortMessage,
-		expiryDate: notification.expiryDate
-	}, operationPath, function (err, record) {
+	elastic.send({
+		method: 'POST',
+		path: operationPath,
+		message: {
+			app: notification.getAppName(),
+			stage: STAGE,
+			operation: notification.operation,
+			date: notification.date,
+			resourceId: notification.resourceId,
+			message: notification.shortMessage,
+			expiryDate: notification.expiryDate
+		}
+	}, function (err, record) {
 		if (err) {
 			callback(err);
 		} else {
-			storeAdditionalData(record._id, notification, callback);
+			logger.info('Operation stored correctly');
+			storeAdditionalData(elastic, record._id, notification, logger, callback);
 		}
 	});
 }
 
-function storeAdditionalData (id, notification, callback) {
+function storeAdditionalData (elastic, id, notification, logger, callback) {
 	// Ignore errors for additional sensitive data
 	const extraPath = indices.extra(notification.date);
-	elasticSearch({
-		action: id,
-		email: notification.userEmail,
-		message: notification.message,
-		app: notification.getAppName(),
-		stage: STAGE,
-		operation: notification.operation,
-		date: notification.date,
-		resourceId: notification.resourceId
-	}, extraPath, function (err) {
+	elastic.send({
+		method: 'POST',
+		path: extraPath,
+		message: {
+			action: id,
+			email: notification.userEmail,
+			message: notification.message,
+			app: notification.getAppName(),
+			stage: STAGE,
+			operation: notification.operation,
+			date: notification.date,
+			resourceId: notification.resourceId
+		}
+	}, function (err) {
 		if (err) {
-			console.error('Error while storing additional data', err.message);
+			logger.error('Error while storing additional data', err.message);
+		} else {
+			logger.info('Additional data stored correctly');
 		}
 		callback(null);
 	});
